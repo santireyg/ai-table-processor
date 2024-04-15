@@ -4,6 +4,7 @@ env
 
 # data files
 *.csv
+*.json
 
 # python cache files
 __pycache__/
@@ -13,3 +14,4 @@ __pycache__/
 
 # main notebook
 main.ipynb
+
