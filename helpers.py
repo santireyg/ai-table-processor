@@ -98,7 +98,7 @@ def calculate_prompt_tokens(prompt:str, df:pd.DataFrame, id_col:str, text_col:st
     
         total_tokens += num_tokens_from_messages(messages)
     
-    return total_tokens
+    return math.ceil(total_tokens * 1.05)  # Add a 5% margin
 
 def num_tokens_from_string(string: str, encoding_name: str = "cl100k_base") -> int:
     """Returns the number of tokens in a text string."""
@@ -127,7 +127,7 @@ def estimate_response_tokens(df:pd.DataFrame, id_col:str, text_col:str, chunk_si
         )
         response_tokens += num_tokens_from_string(json_string)
 
-    response_tokens *= 1.1  # Add a 10% margin
+    response_tokens *= 1.2  # Add a 20% margin
 
     return math.ceil(response_tokens)
 
