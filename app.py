@@ -106,6 +106,28 @@ prompt = f"""
 {prompt_format}\n
 """
 
+# Prepare the final df to be processed
+if is_sample == True:
+    df = table_sample(df = df_original, n = sample_size, type = sample_type)
+else:
+    df = df_original    
+    # create a new column with the original id
+    df['original_id'] = df.index
+    # convert the column to string
+    df[column_to_norm] = df[column_to_norm].astype(str)
+    # create a new column with all values as lower case
+    df['value'] = df[column_to_norm].str.lower()
+    # create a df with the unique values of the column
+    unique_values = df['value'].unique()
+    unique_values = pd.DataFrame(unique_values, columns = ['value'])
+    # order ascending
+    # unique_values.sort_values(by='value', inplace=True)
+    # create a new id column
+    unique_values['id'] = unique_values.index
+    # merge to df the ids from unique_values
+    df = df.merge(unique_values, on = 'value', how = 'left')
+    # run the normalization script using gpt
+
 # START PROCESSING
 st.divider()
 st.subheader("Start your processing")
@@ -113,26 +135,6 @@ start_normalization = st.button("Start processing job", type='primary', disabled
 
 if start_normalization:
     with st.spinner('Wait for it...'):
-        if is_sample == True:
-            df = table_sample(df=df_original, n=sample_size, type=sample_type)
-        else:
-            df = df_original    
-        # create a new column with the original id
-        df['original_id'] = df.index
-        # convert the column to string
-        df[column_to_norm] = df[column_to_norm].astype(str)
-        # create a new column with all values as lower case
-        df['value'] = df[column_to_norm].str.lower()
-        # create a df with the unique values of the column
-        unique_values = df['value'].unique()
-        unique_values = pd.DataFrame(unique_values, columns=['value'])
-        # order ascending
-        # unique_values.sort_values(by='value', inplace=True)
-        # create a new id column
-        unique_values['id'] = unique_values.index
-        # merge to df the ids from unique_values
-        df = df.merge(unique_values, on='value', how='left')
-        # run the normalization script using gpt
         results = gpt_df_paralell(prompt = prompt, # Elige el prompt
                         df = unique_values, # Elige df
                         text_col = "value", # Elige la columna de texto
