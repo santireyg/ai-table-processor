@@ -52,7 +52,7 @@ def table_sample(df, n=75, type='head'):
     else:
         return df.sample(n)
 
-def num_tokens_from_messages(messages, model = "gpt-3.5-turbo"):
+def num_tokens_from_messages(messages:list, model:str = "gpt-3.5-turbo"):
     """Return the number of tokens used by a list of messages."""
     try:
         encoding = tk.encoding_for_model(model)
@@ -73,7 +73,21 @@ def num_tokens_from_messages(messages, model = "gpt-3.5-turbo"):
                 
     return num_tokens
 
-def calculate_prompt_tokens(prompt, df, id_col, text_col, chunk_size = 30):
+def calculate_prompt_tokens(prompt:str, df:pd.DataFrame, id_col:str, text_col:str, model:str = "gpt-3.5-turbo", chunk_size:int = 30):
+    """
+    Calculates the total number of tokens used for a given prompt and DataFrame.
+
+    Args:
+        prompt (str): The prompt to be used in the conversation.
+        df (pd.DataFrame): The DataFrame containing the data.
+        id_col (str): The name of the column containing the ID.
+        text_col (str): The name of the column containing the text.
+        model (str, optional): The name of the language model to use. Defaults to "gpt-3.5-turbo".
+        chunk_size (int, optional): The number of rows to process in each chunk. Defaults to 30.
+
+    Returns:
+        int: The total number of tokens required for the conversation.
+    """
     
     total_tokens = 0
     for i in range(0, df[[id_col, text_col]].shape[0], chunk_size):
