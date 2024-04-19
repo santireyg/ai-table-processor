@@ -55,6 +55,7 @@ if user_csv is not None:
     user_csv.seek(0)
     df_original = pd.read_csv(user_csv, low_memory=False)
     with st.expander("See your data table"):
+        st.text(f"Numero de registros: {df_original.shape[0]}")
         st.dataframe(df_original, use_container_width=True)
     st.divider()
     
