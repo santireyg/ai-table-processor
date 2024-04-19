@@ -132,6 +132,20 @@ def estimate_response_tokens(df:pd.DataFrame, id_col:str, text_col:str, chunk_si
     return math.ceil(response_tokens)
 
 def estimate_costs(prompt:str, df:pd.DataFrame, id_col:str, text_col:str, model:str = "gpt-3.5-turbo", chunk_size = 30):
+    """
+    Estimates the costs of using a language model to process a table.
+    
+    Args:
+        prompt (str): The prompt to be used for generating responses.
+        df (pd.DataFrame): The table data as a pandas DataFrame.
+        id_col (str): The name of the column containing unique identifiers for each row.
+        text_col (str): The name of the column containing the text data to be processed.
+        model (str, optional): The language model to be used. Defaults to "gpt-3.5-turbo".
+        chunk_size (int, optional): The number of rows to process in each chunk. Defaults to 30.
+    
+    Returns:
+        float: The estimated total cost of processing the table.
+    """
     
     costs_dict = {
         "gpt-3.5-turbo":{
