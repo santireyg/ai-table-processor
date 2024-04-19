@@ -123,7 +123,7 @@ def estimate_response_tokens(df:pd.DataFrame, id_col:str, text_col:str, chunk_si
     for i in range(0, df[[id_col, text_col]].shape[0], chunk_size):
         chunk_dict = df[i:i+chunk_size].to_dict(orient="records")
         json_string = '{{\n  "results": {}\n}}'.format(
-            ',\n    '.join([f'{{ "id": {item["id"]}, "answer": "{item["text"]}" }}' for item in chunk_dict])
+            ',\n    '.join([f'{{ "id": {item[id_col]}, "answer": "{item[text_col]}" }}' for item in chunk_dict])
         )
         response_tokens += num_tokens_from_string(json_string)
 
