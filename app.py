@@ -1,7 +1,7 @@
 import os
 import streamlit as st
 import pandas as pd
-from helpers import gpt_df_paralell, table_sample
+from helpers import gpt_df_paralell, table_sample, estimate_costs
 
 # streamlit run app.py --server.enableXsrfProtection false
 
@@ -87,50 +87,56 @@ if user_csv is not None:
                 sample_type = st.selectbox('Select a sample type:', ['head', 'tail', 'random'])
             with col6:
                 sample_size = st.number_input("Sample size", min_value=1, value=75, step=1, format=None, key=None)
+            
+            df = table_sample(df = df_original, n = sample_size, type = sample_type)
+        else:
+            df = df_original    
+            # create a new column with the original id
+            df['original_id'] = df.index
+            # convert the column to string
+            df[column_to_norm] = df[column_to_norm].astype(str)
+            # create a new column with all values as lower case
+            df['value'] = df[column_to_norm].str.lower()
+            # create a df with the unique values of the column
+            unique_values = df['value'].unique()
+            unique_values = pd.DataFrame(unique_values, columns = ['value'])
+            # order ascending
+            # unique_values.sort_values(by='value', inplace=True)
+            # create a new id column
+            unique_values['id'] = unique_values.index
+            # merge to df the ids from unique_values
+            df = df.merge(unique_values, on = 'value', how = 'left')
+            # run the normalization script using gpt
 
-if language is not None:
-    if language == "Español":
-       prompt_language = f"""Observación: Los registros deben ser procesados en: {language}."""
-    elif language == "Portugués":
-        prompt_language = f"""Observação: Os registros devem ser processados em: {language}."""
-    elif language == "Inglés":
-        prompt_language = f"""Note: Records must be processed in: {language}."""    
-    with st.expander("See final prompt"):
-        st.write(f"""{prompt_context}\n\n{prompt_language}\n""")
-        st.code(prompt_format, language='python')
-    data_incomplete = False
+        
+    if language is not None:
+        if language == "Español":
+            prompt_language = f"""Observación: Los registros deben ser procesados en: {language}."""
+        elif language == "Portugués":
+            prompt_language = f"""Observação: Os registros devem ser processados em: {language}."""
+        elif language == "Inglés":
+            prompt_language = f"""Note: Records must be processed in: {language}."""    
+        with st.expander("See final prompt"):
+            st.write(f"""{prompt_context}\n\n{prompt_language}\n""")
+            st.code(prompt_format, language='python')
+        data_incomplete = False
 
-prompt = f"""
-{prompt_context}\n 
-{prompt_language}
-{prompt_format}\n
-"""
-
-# Prepare the final df to be processed
-if is_sample == True:
-    df = table_sample(df = df_original, n = sample_size, type = sample_type)
-else:
-    df = df_original    
-    # create a new column with the original id
-    df['original_id'] = df.index
-    # convert the column to string
-    df[column_to_norm] = df[column_to_norm].astype(str)
-    # create a new column with all values as lower case
-    df['value'] = df[column_to_norm].str.lower()
-    # create a df with the unique values of the column
-    unique_values = df['value'].unique()
-    unique_values = pd.DataFrame(unique_values, columns = ['value'])
-    # order ascending
-    # unique_values.sort_values(by='value', inplace=True)
-    # create a new id column
-    unique_values['id'] = unique_values.index
-    # merge to df the ids from unique_values
-    df = df.merge(unique_values, on = 'value', how = 'left')
-    # run the normalization script using gpt
+    prompt = f"""
+    {prompt_context}\n 
+    {prompt_language}
+    {prompt_format}\n
+    """
+    
+    total_cost = round(estimate_costs(prompt, unique_values, "id", "value", model, step_size), 5)
 
 # START PROCESSING
 st.divider()
 st.subheader("Start your processing")
+
+if 'total_cost' in globals():
+    st.info(f"Estimated costs for processing your data: **U$D {total_cost}**", icon = "ℹ️")
+    st.write("\n")
+
 start_normalization = st.button("Start processing job", type='primary', disabled=data_incomplete)
 
 if start_normalization:
