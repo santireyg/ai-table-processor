@@ -119,3 +119,26 @@ def estimate_response_tokens(df, id_col, text_col, chunk_size = 30):
     respose_tokens *= 1.1  # Add a 10% margin
                     
     return math.ceil(respose_tokens)
+
+def estimate_costs(prompt:str, df:pd.DataFrame, id_col:str, text_col:str, model:str = "gpt-3.5-turbo", chunk_size = 30):
+    
+    costs_dict = {
+        "gpt-3.5-turbo":{
+            "prompt": 0.0005,
+            "response": 0.0015
+        },
+        "gpt-4-turbo":{
+            "prompt": 0.01,
+            "response": 0.03
+        }
+    }
+    
+    prompt_tokens = calculate_prompt_tokens(prompt, df, id_col, text_col, model, chunk_size)
+    response_tokens = estimate_response_tokens(df, id_col, text_col, chunk_size)
+    
+    prompt_cost = (costs_dict[model]["prompt"] * prompt_tokens) / 1000
+    response_cost = (costs_dict[model]["response"] * response_tokens) / 1000
+    
+    total_cost = prompt_cost + response_cost
+    
+    return total_cost
