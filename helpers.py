@@ -85,3 +85,34 @@ def calculate_prompt_tokens(prompt, df, id_col, text_col, chunk_size = 30):
         total_tokens += num_tokens_from_messages(messages)
     
     return total_tokens
+
+def num_tokens_from_string(string: str, encoding_name: str = "cl100k_base") -> int:
+    """Returns the number of tokens in a text string."""
+    encoding = tk.get_encoding(encoding_name)
+    num_tokens = len(encoding.encode(string))
+    return num_tokens
+
+def estimate_response_tokens(df, id_col, text_col, study_type = "normalization", chunk_size = 30):
+
+    respose_tokens = 0
+    
+    if study_type == "normalization":
+        for i in range(0, df[[id_col, text_col]].shape[0], chunk_size):
+            chunk_dict = df[i:i+chunk_size].to_dict(orient="records")
+            json_string = '{{\n  "results": {}\n}}'.format(
+                ',\n    '.join([f'{{ "id": {item["id"]}, "answer": "{item["text"]}" }}' for item in chunk_dict])
+                )
+            respose_tokens += num_tokens_from_string(json_string)
+    
+    if study_type == "labeling":
+        # Hardcodeo el valor de la etiqueta para simular la respuesta
+        for i in range(0, df[[id_col, text_col]].shape[0], chunk_size):
+            chunk = df[i:i+chunk_size].copy()
+            chunk[text_col] = "LabelingStudy" 
+            chunk_dict = chunk.to_dict(orient="records")
+            json_string = '{{\n  "results": {}\n}}'.format(
+                ',\n    '.join([f'{{ "id": {item["id"]}, "answer": "{item["text"]}" }}' for item in chunk_dict])
+                )
+            respose_tokens += num_tokens_from_string(json_string)
+                
+    return respose_tokens
