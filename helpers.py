@@ -106,19 +106,30 @@ def num_tokens_from_string(string: str, encoding_name: str = "cl100k_base") -> i
     num_tokens = len(encoding.encode(string))
     return num_tokens
 
-def estimate_response_tokens(df, id_col, text_col, chunk_size = 30):
+def estimate_response_tokens(df:pd.DataFrame, id_col:str, text_col:str, chunk_size=30):
+    """
+    Estimates the number of response tokens based on the given dataframe, id column, text column, and chunk size.
 
-    respose_tokens = 0
+    Parameters:
+    df (pandas.DataFrame): The dataframe containing the data.
+    id_col (str): The name of the column containing the IDs.
+    text_col (str): The name of the column containing the text.
+    chunk_size (int, optional): The number of rows to process in each chunk. Defaults to 30.
+
+    Returns:
+    int: The estimated number of response tokens.
+    """
+    response_tokens = 0
     for i in range(0, df[[id_col, text_col]].shape[0], chunk_size):
         chunk_dict = df[i:i+chunk_size].to_dict(orient="records")
         json_string = '{{\n  "results": {}\n}}'.format(
             ',\n    '.join([f'{{ "id": {item["id"]}, "answer": "{item["text"]}" }}' for item in chunk_dict])
-            )
-        respose_tokens += num_tokens_from_string(json_string)
+        )
+        response_tokens += num_tokens_from_string(json_string)
 
-    respose_tokens *= 1.1  # Add a 10% margin
-                    
-    return math.ceil(respose_tokens)
+    response_tokens *= 1.1  # Add a 10% margin
+
+    return math.ceil(response_tokens)
 
 def estimate_costs(prompt:str, df:pd.DataFrame, id_col:str, text_col:str, model:str = "gpt-3.5-turbo", chunk_size = 30):
     
